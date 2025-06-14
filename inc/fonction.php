@@ -59,6 +59,80 @@ function getMarcheBy($critere, $valeur, $surfaceMin = null, $surfaceMax = null) 
     $stmt->execute($params);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+function findMarcheBy($critere, $valeur) {
+    global $pdo;
+
+    $params = [':valeur' => $valeur];
+
+    switch ($critere) {
+           case 'province':
+            $sql = "
+                SELECT m.*,ST_AsText(m.geom) AS geom
+                FROM marche m
+                JOIN province p ON ST_Contains(p.geom, m.geom)
+                WHERE LOWER(p.des_provin) = LOWER(:valeur)
+            ";
+            break;
+
+        case 'region':
+            $sql = "
+                SELECT m.*,ST_AsText(m.geom) AS geom
+                FROM marche m
+                JOIN region r ON ST_Contains(r.geom, m.geom)
+                WHERE LOWER(r.des_region) = LOWER(:valeur)
+            ";
+            break;
+
+        case 'district':
+            $sql = "
+                SELECT m.*,ST_AsText(m.geom) AS geom
+                FROM marche m
+                JOIN district d ON ST_Contains(d.geom, m.geom)
+                WHERE LOWER(d.des_fiv) = LOWER(:valeur)
+            ";
+            break;
+
+        case 'rayon':
+            if (is_array($valeur) && isset($valeur['lat'], $valeur['lon'], $valeur['distance'])) {
+                $sql = "
+                    SELECT *,ST_AsText(m.geom) AS geom, ST_DistanceSphere(geom, ST_MakePoint(:lon, :lat)) as distance
+                    FROM marche
+                    WHERE ST_DistanceSphere(geom, ST_MakePoint(:lon, :lat)) <= :distance
+                    ORDER BY distance ASC
+                ";
+                $params = [
+                    ':lat' => $valeur['lat'],
+                    ':lon' => $valeur['lon'],
+                    ':distance' => $valeur['distance'] * 1000
+                ];
+            } else return [];
+
+            break;
+
+        case 'near':
+            if (is_array($valeur) && isset($valeur['lat'], $valeur['lon'])) {
+                $sql = "
+                    SELECT *,ST_AsText(m.geom) AS geom, ST_DistanceSphere(geom, ST_MakePoint(:lon, :lat)) as distance
+                    FROM marche
+                    ORDER BY distance ASC
+                    LIMIT 1
+                ";
+                $params = [
+                    ':lat' => $valeur['lat'],
+                    ':lon' => $valeur['lon']
+                ];
+            } else return [];
+
+            break;
+
+        default:
+            return [];
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 
 ?>

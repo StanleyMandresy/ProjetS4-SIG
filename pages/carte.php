@@ -94,6 +94,45 @@
           }
         });
     }
+function findMarcheBy() {
+  const critere = document.getElementById("critereSpatial").value;
+  const nomZone = document.getElementById("nomZone").value;
+  const rayon = document.getElementById("rayon").value;
+  const lat = document.getElementById("lat").value;
+  
+  const lng = document.getElementById("lng").value;
+ alert(`lat et lng: ${lat} - ${lng}`);
+
+  let url = `../api/findMarcheBy.php?critereSpatial=${critere}`;
+
+  if (critere === 'rayon') {
+    url += `&valeur=${rayon}&lat=${lat}&lng=${lng}`;
+  } else if (critere === 'near') {
+    url += `&lat=${lat}&lng=${lng}`;
+  } else {
+    url += `&valeur=${encodeURIComponent(nomZone)}`;
+  }
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      markersMarche.forEach(m => m.setMap(null));
+      markersMarche = [];
+console.log(data);
+      if (data.status === 'success') {
+        data.resultat.forEach(marche => {
+          const [lng, lat] = marche.geom.replace("POINT(", "").replace(")", "").split(" ");
+          const marker = new google.maps.Marker({
+            position: { lat: parseFloat(lat), lng: parseFloat(lng) },
+            map: carte,
+            title: marche.nom,
+         
+          });
+          markersMarche.push(marker);
+        });
+      }
+    });
+}
 
     google.maps.event.addDomListener(window, 'load', initialize);
   </script>
@@ -129,6 +168,32 @@
     <button type="submit">Rechercher</button>
   </form>
 
+<form onsubmit="event.preventDefault(); findMarcheBy();" style="margin-top:20px; background-color: #e8f4ff;">
+  <label for="critereSpatial">Recherche spatiale :</label>
+  <select id="critereSpatial" name="critereSpatial" onchange="toggleSpatial();">
+    <option value="district">District</option>
+    <option value="region">Région</option>
+    <option value="commune">Commune</option>
+    <option value="province">Province</option>
+    <option value="rayon">Rayon autour du point cliqué</option>
+    <option value="near">Plus proche du point cliqué</option>
+  </select>
+
+  <div id="zoneInput">
+    <label for="nomZone">Nom de la zone :</label>
+    <input type="text" id="nomZone" name="nomZone">
+  </div>
+
+  <div id="rayonInput" style="display:none;">
+    <label for="rayon">Rayon en kilomètres :</label>
+    <input type="number" id="rayon" name="rayon">
+  </div>
+
+  <button type="submit">Rechercher (spatial)</button>
+</form>
+
+
+
   <div id="carteId"></div>
 
   <input type="hidden" id="lat">
@@ -140,6 +205,11 @@
       document.getElementById("produits").style.display = (critere === "produit_vendu") ? "block" : "none";
       document.getElementById("valeur").style.display = (critere === "produit_vendu") ? "none" : "block";
     }
+    function toggleSpatial() {
+  const critere = document.getElementById("critereSpatial").value;
+  document.getElementById("zoneInput").style.display = ['district','region','commune','province'].includes(critere) ? 'block' : 'none';
+  document.getElementById("rayonInput").style.display = (critere === 'rayon') ? 'block' : 'none';
+}
   </script>
 
 </body>
