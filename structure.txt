@@ -1,0 +1,30 @@
+marches-sig/
+│
+├── index.php                 # Page d’accueil (carte, formulaire de recherche)
+├── config/
+│   └── config.php            # Connexion à la base PostgreSQL/PostGIS
+│
+├── inc/
+│   ├── functions.php         # Fonctions PHP utiles (ex: recherche, affichage)
+│   └── header.php            # En-tête HTML commun
+│   └── footer.php            # Pied de page HTML commun
+│
+├── api/
+│   ├── get_marches.php       # Renvoie la liste des marchés (JSON)
+│   ├── add_marche.php        # Ajout d’un marché
+│   └── autres_fonctions.php  # Mise à jour, suppression, etc.
+│
+├── assets/
+│   ├── css/
+│   │   └── style.css         # Feuille de style principale
+│   ├── js/
+│   │   ├── app.js            # JS principal (ex : carte Leaflet)
+│   │   └── leaflet.js        # (ou lien CDN)
+│   └── images/               # Icônes, images de marchés
+│
+├── pages/
+│   ├── ajouter.php           # Page pour ajouter un marché
+│   └── details.php           # Page de détail d’un marché
+│
+└── data/
+    └── (optionnel) données GeoJSON ou images statiques
