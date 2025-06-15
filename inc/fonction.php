@@ -93,30 +93,34 @@ function findMarcheBy($critere, $valeur) {
             break;
 
         case 'rayon':
+         
             if (is_array($valeur) && isset($valeur['lat'], $valeur['lon'], $valeur['distance'])) {
                 $sql = "
-                    SELECT *,ST_AsText(m.geom) AS geom, ST_DistanceSphere(geom, ST_MakePoint(:lon, :lat)) as distance
-                    FROM marche
-                    WHERE ST_DistanceSphere(geom, ST_MakePoint(:lon, :lat)) <= :distance
+                    SELECT m.*, ST_AsText(m.geom) AS geom, ST_DistanceSphere(m.geom, ST_MakePoint(:lon, :lat)) AS distance
+                    FROM marche m
+                    WHERE ST_DistanceSphere(m.geom, ST_MakePoint(:lon, :lat)) <= :distance
                     ORDER BY distance ASC
                 ";
-                $params = [
+                 $params = [
                     ':lat' => $valeur['lat'],
                     ':lon' => $valeur['lon'],
                     ':distance' => $valeur['distance'] * 1000
                 ];
-            } else return [];
+         
 
+            } else return [];
+      
             break;
 
         case 'near':
             if (is_array($valeur) && isset($valeur['lat'], $valeur['lon'])) {
-                $sql = "
-                    SELECT *,ST_AsText(m.geom) AS geom, ST_DistanceSphere(geom, ST_MakePoint(:lon, :lat)) as distance
-                    FROM marche
-                    ORDER BY distance ASC
-                    LIMIT 1
-                ";
+               $sql = "
+                        SELECT m.*, ST_AsText(m.geom) AS geom, ST_DistanceSphere(m.geom, ST_MakePoint(:lon, :lat)) as distance
+                        FROM marche m
+                        ORDER BY distance ASC
+                        LIMIT 1
+                    ";
+
                 $params = [
                     ':lat' => $valeur['lat'],
                     ':lon' => $valeur['lon']

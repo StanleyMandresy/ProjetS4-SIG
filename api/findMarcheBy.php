@@ -8,6 +8,8 @@ require_once('../inc/fonction.php');
 $critere = $_GET['critereSpatial'] ?? null;
 $valeur = $_GET['valeur'] ?? null;
 
+
+
 // Si critère spatial : rayon ou near → attendre des coordonnées
 if (in_array($critere, ['rayon', 'near'])) {
     $lat = isset($_GET['lat']) ? floatval($_GET['lat']) : null;
@@ -16,10 +18,12 @@ if (in_array($critere, ['rayon', 'near'])) {
     if ($critere === 'rayon') {
         $distance = isset($_GET['distance']) ? floatval($_GET['distance']) : null;
         $valeur = [
-            'lat' => $lat,
-            'lon' => $lng,
-            'distance' => $distance
-        ];
+        
+  'lat' => isset($_GET['lat']) ? floatval($_GET['lat']) : null,
+  'lon' => isset($_GET['lng']) ? floatval($_GET['lng']) : null,
+  'distance' => isset($_GET['valeur']) ? floatval($_GET['valeur']) : null,
+];
+        
     } else { // near
         $valeur = [
             'lat' => $lat,
