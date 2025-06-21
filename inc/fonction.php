@@ -92,6 +92,15 @@ function findMarcheBy($critere, $valeur) {
             ";
             break;
 
+        case 'commune':
+            $sql = "
+                SELECT m.*,ST_AsText(m.geom) AS geom
+                FROM marche m
+                JOIN communes c ON ST_Contains(c.geom, m.geom)
+                WHERE LOWER(c.des_commun) = LOWER(:valeur)
+            ";
+            break;
+
         case 'rayon':
          
             if (is_array($valeur) && isset($valeur['lat'], $valeur['lon'], $valeur['distance'])) {
@@ -136,6 +145,160 @@ function findMarcheBy($critere, $valeur) {
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+function createMarche($nom, $surface = null, $type_couverture = null, $jours_ouverts = null, $description = null, $photo_url = null, $latitude = null, $longitude = null) {
+    global $pdo;
+    
+    try {
+        // Définir la requête SQL selon la présence des coordonnées
+        if ($latitude !== null && $longitude !== null) {
+            $sql = "INSERT INTO marche (nom, surface, type_couverture, jours_ouverts, description, photo_url, geom) 
+                    VALUES (:nom, :surface, :type_couverture, :jours_ouverts, :description, :photo_url, 
+                    ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326))";
+        } else {
+            $sql = "INSERT INTO marche (nom, surface, type_couverture, jours_ouverts, description, photo_url, geom) 
+                    VALUES (:nom, :surface, :type_couverture, :jours_ouverts, :description, :photo_url, NULL)";
+        }
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':nom', $nom);
+        $stmt->bindParam(':surface', $surface);
+        $stmt->bindParam(':type_couverture', $type_couverture);
+        $stmt->bindParam(':jours_ouverts', $jours_ouverts);
+        $stmt->bindParam(':description', $description);
+        $stmt->bindParam(':photo_url', $photo_url);
+        
+        // Lier les paramètres de géolocalisation seulement s'ils sont présents
+        if ($latitude !== null && $longitude !== null) {
+            $stmt->bindParam(':latitude', $latitude, PDO::PARAM_STR);
+            $stmt->bindParam(':longitude', $longitude, PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
+        return $pdo->lastInsertId();
+    } catch (PDOException $e) {
+        throw new Exception("Erreur lors de la création du marché : " . $e->getMessage());
+    }
+}
+
+
+/*
+    * READ - Récupérer tous les marchés
+*/
+
+
+function getAllMarches() {
+    global $pdo;
+    
+    try {
+        $sql = "SELECT id, nom, surface, type_couverture, jours_ouverts, description, photo_url,
+                    ST_X(geom) as longitude, ST_Y(geom) as latitude
+                    FROM marche 
+                ORDER BY nom";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        throw new Exception("Erreur lors de la récupération des marchés : " . $e->getMessage());
+    }
+}
+
+
+/*
+    * UPDATE - Mettre à jour un marché
+*/
+
+
+function updateMarche($id, $nom, $surface = null, $type_couverture = null, $jours_ouverts = null, $description = null, $photo_url = null, $latitude = null, $longitude = null) {
+    global $pdo;
+    
+    try {
+        // Utiliser deux requêtes différentes selon la présence des coordonnées
+        if ($latitude !== null && $longitude !== null) {
+            $sql = "UPDATE marche 
+                    SET nom = :nom, 
+                        surface = :surface, 
+                        type_couverture = :type_couverture, 
+                        jours_ouverts = :jours_ouverts, 
+                        description = :description, 
+                        photo_url = :photo_url,
+                        geom = ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
+                    WHERE id = :id";
+        } else {
+            $sql = "UPDATE marche 
+                    SET nom = :nom, 
+                        surface = :surface, 
+                        type_couverture = :type_couverture, 
+                        jours_ouverts = :jours_ouverts, 
+                        description = :description, 
+                        photo_url = :photo_url
+                    WHERE id = :id";
+        }
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':nom', $nom);
+        $stmt->bindParam(':surface', $surface);
+        $stmt->bindParam(':type_couverture', $type_couverture);
+        $stmt->bindParam(':jours_ouverts', $jours_ouverts);
+        $stmt->bindParam(':description', $description);
+        $stmt->bindParam(':photo_url', $photo_url);
+        
+        // Lier les paramètres de géolocalisation seulement s'ils sont présents
+        if ($latitude !== null && $longitude !== null) {
+            $stmt->bindParam(':latitude', $latitude, PDO::PARAM_STR);
+            $stmt->bindParam(':longitude', $longitude, PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
+    } catch (PDOException $e) {
+        throw new Exception("Erreur lors de la mise à jour du marché : " . $e->getMessage());
+    }
+}
+
+/*
+    * DELETE - Supprimer un marché
+*/
+
+
+function deleteMarche($id) {
+    global $pdo;
+    
+    try {
+        $sql = "DELETE FROM marche WHERE id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
+    } catch (PDOException $e) {
+        throw new Exception("Erreur lors de la suppression du marché : " . $e->getMessage());
+    }
+}
+
+
+/*
+    * READ - Récupérer un marché par son ID
+*/
+
+
+function getMarcheById($id) {
+    global $pdo;
+    
+    try {
+        $sql = "SELECT id, nom, surface, type_couverture, jours_ouverts, description, photo_url,
+                    ST_X(geom) as longitude, ST_Y(geom) as latitude
+                    FROM marche 
+                WHERE id = :id";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        throw new Exception("Erreur lors de la récupération du marché : " . $e->getMessage());
+    }
 }
 
 

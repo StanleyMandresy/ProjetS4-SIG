@@ -86,3 +86,11 @@ INSERT INTO marche_type_produit (marche_id, type_id) VALUES
 CREATE INDEX marche_geom_idx ON marche USING GIST (geom);
 
 --== 6. importer les fichiers shapefile dans shapefile-import
+CREATE TABLE admin (
+    id SERIAL PRIMARY KEY,
+    pseudo VARCHAR(100) NOT NULL,
+    motdepasse VARCHAR(255) NOT NULL
+);
+
+INSERT INTO admin (pseudo,motdepasse) VALUES
+('admin','admin');

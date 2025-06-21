@@ -1,4 +1,14 @@
 <?php
+session_start();
+
+include 'header.php';
+
+
+if (!isset($_SESSION['pseudo'])) {
+    header("Location: index.php");
+    exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -23,6 +33,7 @@
       display: block;
       margin-top: 5px;
     }
+ 
   </style>
 
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao"></script>
@@ -32,11 +43,53 @@
     let marker = null;
     let markersMarche = [];
 
-    function initialize() {
+       function initialize() {
       const mapOptions = {
         center: new google.maps.LatLng(-18.8792, 47.5079),
         zoom: 7,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        styles: [
+          {
+            "featureType": "administrative",
+            "elementType": "labels.text.fill",
+            "stylers": [{"color": "#444444"}]
+          },
+          {
+            "featureType": "landscape",
+            "elementType": "all",
+            "stylers": [{"color": "#f2f2f2"}]
+          },
+          {
+            "featureType": "poi",
+            "elementType": "all",
+            "stylers": [{"visibility": "off"}]
+          },
+          {
+            "featureType": "road",
+            "elementType": "all",
+            "stylers": [{"saturation": -100}, {"lightness": 45}]
+          },
+          {
+            "featureType": "road.highway",
+            "elementType": "all",
+            "stylers": [{"visibility": "simplified"}]
+          },
+          {
+            "featureType": "road.arterial",
+            "elementType": "labels.icon",
+            "stylers": [{"visibility": "off"}]
+          },
+          {
+            "featureType": "transit",
+            "elementType": "all",
+            "stylers": [{"visibility": "off"}]
+          },
+          {
+            "featureType": "water",
+            "elementType": "all",
+            "stylers": [{"color": "#d4e6f4"}, {"visibility": "on"}]
+          }
+        ]
       };
 
       carte = new google.maps.Map(document.getElementById("carteId"), mapOptions);
@@ -75,25 +128,34 @@
 
       const url = `../api/getMarcheBy.php?critere=${critere}&valeur=${encodeURIComponent(valeur)}&surfaceMin=${surfaceMin}&surfaceMax=${surfaceMax}`;
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          markersMarche.forEach(m => m.setMap(null));
-          markersMarche = [];
-
-          if (data.status === 'success') {
+    fetch(url)
+    .then(res => res.json())
+    .then(data => {
+        // Effacer les marqueurs existants
+        clearMarkers();
+      
+        if (data.status === 'success') {
             data.data.forEach(marche => {
-              const [lng, lat] = marche.geom.replace("POINT(", "").replace(")", "").split(" ");
-              const marker = new google.maps.Marker({
-                position: { lat: parseFloat(lat), lng: parseFloat(lng) },
-                map: carte,
-                title: marche.nom
-              });
-              markersMarche.push(marker);
+                // Extraire les coordonnées depuis geom
+                const [lng, lat] = marche.geom.replace("POINT(", "").replace(")", "").split(" ");
+                
+                // Préparer l'objet marché avec les bonnes propriétés
+                const marcheData = {
+                    ...marche,
+                    latitude: parseFloat(lat),
+                    longitude: parseFloat(lng)
+                };
+
+                // Utiliser la fonction existante addMarcheMarker
+                addMarcheMarker(marcheData);
             });
-          }
-        });
-    }
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors du chargement des données');
+    });
+  }
 function findMarcheBy() {
   const critere = document.getElementById("critereSpatial").value;
   const nomZone = document.getElementById("nomZone").value;
@@ -113,31 +175,87 @@ function findMarcheBy() {
     url += `&valeur=${encodeURIComponent(nomZone)}`;
   }
 
-  fetch(url)
+ fetch(url)
     .then(res => res.json())
     .then(data => {
-      markersMarche.forEach(m => m.setMap(null));
-      markersMarche = [];
-console.log(data);
-      if (data.status === 'success') {
-        data.resultat.forEach(marche => {
-          const [lng, lat] = marche.geom.replace("POINT(", "").replace(")", "").split(" ");
-          const marker = new google.maps.Marker({
-            position: { lat: parseFloat(lat), lng: parseFloat(lng) },
-            map: carte,
-            title: marche.nom,
-         
-          });
-          markersMarche.push(marker);
-        });
-      }
+        // Effacer les marqueurs existants
+        clearMarkers();
+        
+      
+
+        if (data.status === 'success') {
+            data.resultat.forEach(marche => {
+                // Extraire les coordonnées depuis geom
+                const [lng, lat] = marche.geom.replace("POINT(", "").replace(")", "").split(" ");
+                
+                // Préparer l'objet marché avec les bonnes propriétés
+                const marcheData = {
+                    ...marche,
+                    latitude: parseFloat(lat),
+                    longitude: parseFloat(lng)
+                };
+
+                // Utiliser la fonction existante addMarcheMarker
+                addMarcheMarker(marcheData);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors du chargement des données');
     });
 }
+function loadAllMarches() {
+    const loadButton = document.querySelector('.left-buttons button');
+    const originalHTML = loadButton.innerHTML;
+    
+    loadButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+    loadButton.disabled = true;
 
-    google.maps.event.addDomListener(window, 'load', initialize);
-  </script>
+    fetch('../api/getAllMarches.php')
+        .then(res => res.json())
+        .then(data => {
+            clearMarkers();
+            
+            if (data.status === 'success') {
+                data.data.forEach(marche => {
+                    addMarcheMarker(marche);
+                });
+                
+                if (markersMarche.length > 0) {
+                    const bounds = new google.maps.LatLngBounds();
+                    markersMarche.forEach(m => bounds.extend(m.getPosition()));
+                    carte.fitBounds(bounds, {padding: 20});
+                }
+            }
+        })
+        .finally(() => {
+            loadButton.innerHTML = originalHTML;
+            loadButton.disabled = false;
+        });
+}
+
+// Fonction pour effacer tous les marqueurs
+function clearMarkers() {
+    markersMarche.forEach(m => m.setMap(null));
+    markersMarche = [];
+    infoWindows = [];
+}
+
+ google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
 </head>
 <body>
+  <h1>Bienvenue <?= htmlspecialchars($_SESSION['pseudo']) ?> !</h1>
+<p><a href="../api/logout.php">Se déconnecter</a></p>
+  <div class="toolbar" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #f5f5f5; border-radius: 5px; margin-bottom: 10px;">
+  <div class="left-buttons">
+    <button onclick="loadAllMarches()" class="btn btn-primary">
+      <i class="fas fa-map-marker-alt"></i> Afficher tous les marchés
+    </button>
+  </div>
+  
+
 
   <form onsubmit="event.preventDefault(); getMarcheBy();">
     <label for="critere">Critère :</label>
@@ -191,13 +309,16 @@ console.log(data);
 
   <button type="submit">Rechercher (spatial)</button>
 </form>
-
-
-
-  <div id="carteId"></div>
-
+ 
+  <!-- Votre carte et champs cachés existants... -->
+  <div id="carteId" style="height: 500px; width: 100%; margin-top: 20px;"></div>
   <input type="hidden" id="lat">
   <input type="hidden" id="lng">
+
+  <!-- Styles pour les modals -->
+  
+  </style>
+
 
   <script>
     function toggleSurface() {
@@ -210,7 +331,80 @@ console.log(data);
   document.getElementById("zoneInput").style.display = ['district','region','commune','province'].includes(critere) ? 'block' : 'none';
   document.getElementById("rayonInput").style.display = (critere === 'rayon') ? 'block' : 'none';
 }
-  </script>
+function createInfoWindow(marche) {
+    return new google.maps.InfoWindow({
+        content: `
+            <div style="min-width: 200px; padding: 10px; font-family: Arial, sans-serif;">
+                <h3 style="margin: 0 0 10px 0; color: #1a73e8; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                    ${marche.nom}
+                </h3>
+                <div style="margin-bottom: 8px;">
+                    <strong>Surface:</strong> ${marche.surface || 'N/A'} m²
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <strong>Type:</strong> ${marche.type_couverture || 'N/A'}
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <strong>Ouverture:</strong> ${marche.jours_ouverts || 'N/A'}
+                </div>
+                ${marche.description ? `
+                    <div style="margin-bottom: 8px; font-style: italic;">
+                        "${marche.description}"
+                    </div>
+                ` : ''}
+                ${marche.photo_url ? `
+                    <div style="margin-top: 10px;">
+                        <img src="../${marche.photo_url}" 
+                             alt="Photo du marché"
+                             style="max-width: 100%; max-height: 150px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+                ` : ''}
+            </div>
+        `
+    });
+}
+function addMarcheMarker(marche) {
+    // Vérification des coordonnées
+    const lat = parseFloat(marche.latitude);
+    const lng = parseFloat(marche.longitude);
+    if (isNaN(lat) || isNaN(lng)) return null;
+
+    // Création du marqueur
+    const marker = new google.maps.Marker({
+        position: { lat: lat, lng: lng },
+        map: carte,
+        title: marche.nom,
+        icon: {
+            url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+            scaledSize: new google.maps.Size(32, 32)
+        }
+    });
+
+    // Création de l'infobulle
+    const infoWindow = createInfoWindow(marche);
+
+    // Gestion du clic
+    marker.addListener('click', () => {
+        // Fermer toutes les autres infobulles
+        markersMarche.forEach(m => {
+            if (m.infoWindow) m.infoWindow.close();
+        });
+        
+        // Ouvrir l'infobulle actuelle
+        infoWindow.open(carte, marker);
+    });
+
+    // Stocker l'infobulle avec le marqueur
+    marker.infoWindow = infoWindow;
+    markersMarche.push(marker);
+    
+    return marker;
+}
+   </script>
 
 </body>
 </html>
+
+<?php
+include 'footer.php';
+?>
