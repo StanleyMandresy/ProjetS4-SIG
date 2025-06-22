@@ -245,79 +245,90 @@ function clearMarkers() {
  google.maps.event.addDomListener(window, 'load', initialize);
     </script>
 </head>
-<body>
+<body style="font-family: Arial, sans-serif; padding: 20px;">
+
   <h1>Bienvenue <?= htmlspecialchars($_SESSION['pseudo']) ?> !</h1>
-<p><a href="../api/logout.php">Se déconnecter</a></p>
-  <div class="toolbar" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #f5f5f5; border-radius: 5px; margin-bottom: 10px;">
-  <div class="left-buttons">
-    <button onclick="loadAllMarches()" class="btn btn-primary">
-      <i class="fas fa-map-marker-alt"></i> Afficher tous les marchés
-    </button>
+  <p><a href="../api/logout.php">Se déconnecter</a></p>
+
+  <!-- Barre d'outils -->
+  <div class="toolbar" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #f5f5f5; border-radius: 5px; margin-bottom: 20px;">
+    <div class="left-buttons">
+      <button onclick="loadAllMarches()" class="btn btn-primary">
+        <i class="fas fa-map-marker-alt"></i> Afficher tous les marchés
+      </button>
+    </div>
   </div>
-  
 
+  <!-- Formulaire de recherche par critère -->
+  <form onsubmit="event.preventDefault(); getMarcheBy();" style="margin-bottom: 30px; padding: 15px; background-color: #f9f9f9; border-radius: 8px;">
+    <h2>Recherche par critère</h2>
 
-  <form onsubmit="event.preventDefault(); getMarcheBy();">
     <label for="critere">Critère :</label>
-    <select id="critere" name="critere" onchange="toggleSurface();">
+    <select id="critere" name="critere" onchange="toggleSurface();" style="margin-bottom: 10px;">
       <option value="nom">Nom</option>
       <option value="type_couverture">Type couverture</option>
       <option value="jour_ouverture">Jour d'ouverture</option>
       <option value="produit_vendu">Produit vendu</option>
     </select>
 
-    <label for="valeur">Valeur :</label>
-    <input type="text" id="valeur" name="valeur">
+    <br>
 
-    <div id="produits" style="display:none;">
-      <label>Produits :</label>
+    <label for="valeur">Valeur :</label>
+    <input type="text" id="valeur" name="valeur" style="margin-bottom: 10px;">
+
+    <!-- Produits (affichés si produit_vendu sélectionné) -->
+    <div id="produits" style="display: none; margin-bottom: 10px;">
+      <label>Produits :</label><br>
       <label><input type="checkbox" name="produit[]" value="Légumes"> Légumes</label>
       <label><input type="checkbox" name="produit[]" value="Viande"> Viande</label>
       <label><input type="checkbox" name="produit[]" value="Poisson"> Poisson</label>
-      <!-- Ajoute les autres produits ici -->
     </div>
 
-    <div id="surface">
+    <!-- Surface -->
+    <div id="surface" style="margin-bottom: 10px;">
       <label>Surface entre :</label>
-      <input type="number" id="surfaceMin" placeholder="Min"> -
-      <input type="number" id="surfaceMax" placeholder="Max">
+      <input type="number" id="surfaceMin" placeholder="Min" style="width: 80px;"> -
+      <input type="number" id="surfaceMax" placeholder="Max" style="width: 80px;">
     </div>
 
-    <button type="submit">Rechercher</button>
+    <button type="submit" class="btn btn-success">Rechercher</button>
   </form>
 
-<form onsubmit="event.preventDefault(); findMarcheBy();" style="margin-top:20px; background-color: #e8f4ff;">
-  <label for="critereSpatial">Recherche spatiale :</label>
-  <select id="critereSpatial" name="critereSpatial" onchange="toggleSpatial();">
-    <option value="district">District</option>
-    <option value="region">Région</option>
-    <option value="commune">Commune</option>
-    <option value="province">Province</option>
-    <option value="rayon">Rayon autour du point cliqué</option>
-    <option value="near">Plus proche du point cliqué</option>
-  </select>
+  <!-- Formulaire de recherche spatiale -->
+  <form onsubmit="event.preventDefault(); findMarcheBy();" style="margin-bottom: 30px; padding: 15px; background-color: #e8f4ff; border-radius: 8px;">
+    <h2>Recherche spatiale</h2>
 
-  <div id="zoneInput">
-    <label for="nomZone">Nom de la zone :</label>
-    <input type="text" id="nomZone" name="nomZone">
-  </div>
+    <label for="critereSpatial">Critère :</label>
+    <select id="critereSpatial" name="critereSpatial" onchange="toggleSpatial();" style="margin-bottom: 10px;">
+      <option value="district">District</option>
+      <option value="region">Région</option>
+      <option value="commune">Commune</option>
+      <option value="province">Province</option>
+      <option value="rayon">Rayon autour du point cliqué</option>
+      <option value="near">Plus proche du point cliqué</option>
+    </select>
 
-  <div id="rayonInput" style="display:none;">
-    <label for="rayon">Rayon en kilomètres :</label>
-    <input type="number" id="rayon" name="rayon">
-  </div>
+    <!-- Zone textuelle -->
+   <div id="zoneInput" style="margin-bottom: 10px;">
+  <label for="nomZone">Nom de la zone :</label>
+  <select id="nomZone" name="nomZone"></select>
+</div>
 
-  <button type="submit">Rechercher (spatial)</button>
-</form>
- 
-  <!-- Votre carte et champs cachés existants... -->
-  <div id="carteId" style="height: 500px; width: 100%; margin-top: 20px;"></div>
+    <!-- Rayon -->
+    <div id="rayonInput" style="display: none; margin-bottom: 10px;">
+      <label for="rayon">Rayon en kilomètres :</label>
+      <input type="number" id="rayon" name="rayon">
+    </div>
+
+    <button type="submit" class="btn btn-info">Rechercher (spatial)</button>
+  </form>
+
+  <!-- Carte -->
+  <div id="carteId" style="height: 500px; width: 100%; border: 1px solid #ccc; border-radius: 8px; margin-top: 20px;"></div>
   <input type="hidden" id="lat">
   <input type="hidden" id="lng">
-
-  <!-- Styles pour les modals -->
   
-  </style>
+
 
 
   <script>
@@ -330,6 +341,21 @@ function clearMarkers() {
   const critere = document.getElementById("critereSpatial").value;
   document.getElementById("zoneInput").style.display = ['district','region','commune','province'].includes(critere) ? 'block' : 'none';
   document.getElementById("rayonInput").style.display = (critere === 'rayon') ? 'block' : 'none';
+    if (['district','region','commune','province'].includes(critere)) {
+        fetch(`../api/getZones.php?type=${critere}`)
+          .then(res => res.json())
+          .then(data => {
+            const select = document.getElementById("nomZone");
+            select.innerHTML = ""; // Vider les anciennes options
+            data.forEach(zone => {
+              const option = document.createElement("option");
+              option.value = zone;
+              option.textContent = zone;
+              select.appendChild(option);
+            });
+          });
+      }
+
 }
 function createInfoWindow(marche) {
     return new google.maps.InfoWindow({

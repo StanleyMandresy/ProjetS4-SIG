@@ -299,6 +299,30 @@ function getMarcheById($id) {
     } catch (PDOException $e) {
         throw new Exception("Erreur lors de la récupération du marché : " . $e->getMessage());
     }
+
+
+}
+function getZones($type) {
+    global $pdo;
+
+    // Correspondance entre le type demandé et la table + champ de description
+    $tables = [
+        'province' => ['table' => 'province', 'champ' => 'des_provin'],
+        'region'   => ['table' => 'region', 'champ' => 'des_region'],
+        'district' => ['table' => 'district', 'champ' => 'des_fiv'],
+        'commune'  => ['table' => 'communes', 'champ' => 'des_commun']
+    ];
+
+    if (!isset($tables[$type])) {
+        return [];
+    }
+
+    $table = $tables[$type]['table'];
+    $champ = $tables[$type]['champ'];
+
+    $sql = "SELECT DISTINCT $champ AS nom FROM $table ORDER BY $champ";
+    $stmt = $pdo->query($sql);
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);
 }
 
 
