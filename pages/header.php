@@ -57,47 +57,14 @@
           <ul class="menu menu-horizontal px-1 gap-1">
             <!-- Accueil -->
             <li>
-              <a href="index.php" class="shadcn-btn flex items-center gap-2">
+              <a href="carte.php" class="shadcn-btn flex items-center gap-2">
                 <i class="fas fa-home"></i>
                 Accueil
               </a>
             </li>
             
             <!-- Dropdown Catégories -->
-            <li>
-              <details>
-                <summary class="shadcn-btn">
-                  <i class="fas fa-layer-group"></i>
-                  Catégories
-                </summary>
-                <ul class="p-2 bg-base-100 rounded-box shadow-lg dropdown-animation z-50">
-                  <li>
-                    <a href="marches.php?categorie=alimentation" class="flex items-center gap-2">
-                      <i class="fas fa-shopping-basket text-green-500"></i>
-                      Alimentation
-                    </a>
-                  </li>
-                  <li>
-                    <a href="marches.php?categorie=textile" class="flex items-center gap-2">
-                      <i class="fas fa-tshirt text-blue-500"></i>
-                      Textile
-                    </a>
-                  </li>
-                  <li>
-                    <a href="marches.php?categorie=artisanat" class="flex items-center gap-2">
-                      <i class="fas fa-hammer text-amber-500"></i>
-                      Artisanat
-                    </a>
-                  </li>
-                  <li>
-                    <a href="marches.php?categorie=autres" class="flex items-center gap-2">
-                      <i class="fas fa-ellipsis-h text-gray-500"></i>
-                      Autres catégories
-                    </a>
-                  </li>
-                </ul>
-              </details>
-            </li>
+            
             
             <!-- Cartes -->
             <li>
@@ -107,13 +74,6 @@
               </a>
             </li>
             
-            <!-- Statistiques -->
-            <li>
-              <a href="stats.php" class="shadcn-btn flex items-center gap-2">
-                <i class="fas fa-chart-bar"></i>
-                Statistiques
-              </a>
-            </li>
 
            <!-- Marche -->
             <li>
@@ -127,26 +87,15 @@
             <li>
               <details>
                 <summary class="shadcn-btn">
-                  <i class="fas fa-info-circle"></i>
-                  Informations
+                  <i class="fas fa-user"></i>    
+                  <?= htmlspecialchars($_SESSION['pseudo']) ?>
                 </summary>
                 <ul class="p-2 bg-base-100 rounded-box shadow-lg dropdown-animation z-50 w-64">
+                
                   <li>
-                    <a href="apropos.php" class="flex items-center gap-2">
-                      <i class="fas fa-question-circle text-info"></i>
-                      À propos
-                    </a>
-                  </li>
-                  <li>
-                    <a href="contact.php" class="flex items-center gap-2">
-                      <i class="fas fa-envelope text-secondary"></i>
-                      Contact
-                    </a>
-                  </li>
-                  <li>
-                    <a href="aide.php" class="flex items-center gap-2">
-                      <i class="fas fa-life-ring text-primary"></i>
-                      Aide & FAQ
+                    <a href="../api/logout.php" class="flex items-center gap-2">
+                      <i class="fas fa-sign-out-alt text-primary"></i>
+                      Se deconnecter
                     </a>
                   </li>
                 </ul>

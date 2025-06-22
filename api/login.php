@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 require '../config/config.php';
 
@@ -19,4 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
-?>
+print_r(error_reporting(E_ALL));
+print_r(ini_get('display_errors'));
+print_r(ini_get('display_startup_errors'));
+?>      
+

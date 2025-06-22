@@ -52,12 +52,12 @@
           <div>
             <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
               <i class="fas fa-tags text-primary"></i>
-              Catégories
+              Resources 
             </h3>
             <ul class="space-y-2">
-              <li><a href="marches.php?categorie=alimentation" class="link link-hover flex items-center gap-2"><i class="fas fa-shopping-basket text-green-500 text-sm"></i> Alimentation</a></li>
-              <li><a href="marches.php?categorie=textile" class="link link-hover flex items-center gap-2"><i class="fas fa-tshirt text-blue-500 text-sm"></i> Textile</a></li>
-              <li><a href="marches.php?categorie=artisanat" class="link link-hover flex items-center gap-2"><i class="fas fa-hammer text-amber-500 text-sm"></i> Artisanat</a></li>
+              <li><a href="marches.php?categorie=alimentation" class="link link-hover flex items-center gap-2"><i class="fas fa-shopping-basket text-green-500 text-sm"></i> Blog</a></li>
+              <li><a href="marches.php?categorie=textile" class="link link-hover flex items-center gap-2"><i class="fas fa-tshirt text-blue-500 text-sm"></i> Help Center </a></li>
+              <li><a href="marches.php?categorie=artisanat" class="link link-hover flex items-center gap-2"><i class="fas fa-hammer text-amber-500 text-sm"></i> FAQ</a></li>
               <li><a href="marches.php?categorie=autres" class="link link-hover flex items-center gap-2"><i class="fas fa-ellipsis-h text-gray-500 text-sm"></i> Autres</a></li>
             </ul>
           </div>

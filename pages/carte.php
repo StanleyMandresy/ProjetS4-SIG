@@ -3,39 +3,20 @@ session_start();
 
 include 'header.php';
 
-
 if (!isset($_SESSION['pseudo'])) {
     header("Location: index.php");
     exit;
 }
-
 ?>
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-  <style type="text/css">
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-    }
-    #carteId {
-      height: 70%;
-    }
-    form {
-      padding: 10px;
-      background-color: #f5f5f5;
-    }
-    label {
-      display: block;
-      margin-top: 5px;
-    }
- 
-  </style>
-
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <!-- <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"> -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao"></script>
 
   <script>
@@ -43,7 +24,7 @@ if (!isset($_SESSION['pseudo'])) {
     let marker = null;
     let markersMarche = [];
 
-       function initialize() {
+    function initialize() {
       const mapOptions = {
         center: new google.maps.LatLng(-18.8792, 47.5079),
         zoom: 7,
@@ -118,7 +99,6 @@ if (!isset($_SESSION['pseudo'])) {
       const surfaceMax = document.getElementById("surfaceMax").value;
 
       if (critere === "produit_vendu") {
-        // Récupérer les produits cochés
         const produits = [];
         document.querySelectorAll("input[name='produit[]']:checked").forEach(cb => {
           produits.push(cb.value);
@@ -128,280 +108,296 @@ if (!isset($_SESSION['pseudo'])) {
 
       const url = `../api/getMarcheBy.php?critere=${critere}&valeur=${encodeURIComponent(valeur)}&surfaceMin=${surfaceMin}&surfaceMax=${surfaceMax}`;
 
-    fetch(url)
-    .then(res => res.json())
-    .then(data => {
-        // Effacer les marqueurs existants
-        clearMarkers();
-      
-        if (data.status === 'success') {
-            data.data.forEach(marche => {
-                // Extraire les coordonnées depuis geom
-                const [lng, lat] = marche.geom.replace("POINT(", "").replace(")", "").split(" ");
-                
-                // Préparer l'objet marché avec les bonnes propriétés
-                const marcheData = {
-                    ...marche,
-                    latitude: parseFloat(lat),
-                    longitude: parseFloat(lng)
-                };
-
-                // Utiliser la fonction existante addMarcheMarker
-                addMarcheMarker(marcheData);
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors du chargement des données');
-    });
-  }
-function findMarcheBy() {
-  const critere = document.getElementById("critereSpatial").value;
-  const nomZone = document.getElementById("nomZone").value;
-  const rayon = document.getElementById("rayon").value;
-  const lat = document.getElementById("lat").value;
-  
-  const lng = document.getElementById("lng").value;
- alert(`lat et lng: ${lat} - ${lng}`);
-
-  let url = `../api/findMarcheBy.php?critereSpatial=${critere}`;
-
-  if (critere === 'rayon') {
-    url += `&valeur=${rayon}&lat=${lat}&lng=${lng}`;
-  } else if (critere === 'near') {
-    url += `&lat=${lat}&lng=${lng}`;
-  } else {
-    url += `&valeur=${encodeURIComponent(nomZone)}`;
-  }
-
- fetch(url)
-    .then(res => res.json())
-    .then(data => {
-        // Effacer les marqueurs existants
-        clearMarkers();
-        
-      
-
-        if (data.status === 'success') {
-            data.resultat.forEach(marche => {
-                // Extraire les coordonnées depuis geom
-                const [lng, lat] = marche.geom.replace("POINT(", "").replace(")", "").split(" ");
-                
-                // Préparer l'objet marché avec les bonnes propriétés
-                const marcheData = {
-                    ...marche,
-                    latitude: parseFloat(lat),
-                    longitude: parseFloat(lng)
-                };
-
-                // Utiliser la fonction existante addMarcheMarker
-                addMarcheMarker(marcheData);
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors du chargement des données');
-    });
-}
-function loadAllMarches() {
-    const loadButton = document.querySelector('.left-buttons button');
-    const originalHTML = loadButton.innerHTML;
-    
-    loadButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
-    loadButton.disabled = true;
-
-    fetch('../api/getAllMarches.php')
+      fetch(url)
         .then(res => res.json())
         .then(data => {
-            clearMarkers();
+          clearMarkers();
+        
+          if (data.status === 'success') {
+              data.data.forEach(marche => {
+                  const [lng, lat] = marche.geom.replace("POINT(", "").replace(")", "").split(" ");
+                  
+                  const marcheData = {
+                      ...marche,
+                      latitude: parseFloat(lat),
+                      longitude: parseFloat(lng)
+                  };
+
+                  addMarcheMarker(marcheData);
+              });
+          }
+        })
+        .catch(error => {
+          console.error('Erreur:', error);
+          alert('Erreur lors du chargement des données');
+        });
+    }
+
+    function findMarcheBy() {
+      const critere = document.getElementById("critereSpatial").value;
+      const nomZone = document.getElementById("nomZone").value;
+      const rayon = document.getElementById("rayon").value;
+      const lat = document.getElementById("lat").value;
+      const lng = document.getElementById("lng").value;
+
+      let url = `../api/findMarcheBy.php?critereSpatial=${critere}`;
+
+      if (critere === 'rayon') {
+        url += `&valeur=${rayon}&lat=${lat}&lng=${lng}`;
+      } else if (critere === 'near') {
+        url += `&lat=${lat}&lng=${lng}`;
+      } else {
+        url += `&valeur=${encodeURIComponent(nomZone)}`;
+      }
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          clearMarkers();
+          
+          if (data.status === 'success') {
+              data.resultat.forEach(marche => {
+                  const [lng, lat] = marche.geom.replace("POINT(", "").replace(")", "").split(" ");
+                  
+                  const marcheData = {
+                      ...marche,
+                      latitude: parseFloat(lat),
+                      longitude: parseFloat(lng)
+                  };
+
+                  addMarcheMarker(marcheData);
+              });
+          }
+        })
+        .catch(error => {
+          console.error('Erreur:', error);
+          alert('Erreur lors du chargement des données');
+        });
+    }
+
+    function loadAllMarches() {
+      const loadButton = document.querySelector('.left-buttons button');
+      const originalHTML = loadButton.innerHTML;
+      
+      loadButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Chargement...';
+      loadButton.disabled = true;
+
+      fetch('../api/getAllMarches.php')
+        .then(res => res.json())
+        .then(data => {
+          clearMarkers();
+          
+          if (data.status === 'success') {
+            data.data.forEach(marche => {
+              addMarcheMarker(marche);
+            });
             
-            if (data.status === 'success') {
-                data.data.forEach(marche => {
-                    addMarcheMarker(marche);
-                });
-                
-                if (markersMarche.length > 0) {
-                    const bounds = new google.maps.LatLngBounds();
-                    markersMarche.forEach(m => bounds.extend(m.getPosition()));
-                    carte.fitBounds(bounds, {padding: 20});
-                }
+            if (markersMarche.length > 0) {
+              const bounds = new google.maps.LatLngBounds();
+              markersMarche.forEach(m => bounds.extend(m.getPosition()));
+              carte.fitBounds(bounds, {padding: 20});
             }
+          }
         })
         .finally(() => {
-            loadButton.innerHTML = originalHTML;
-            loadButton.disabled = false;
+          loadButton.innerHTML = originalHTML;
+          loadButton.disabled = false;
         });
-}
+    }
 
-// Fonction pour effacer tous les marqueurs
-function clearMarkers() {
-    markersMarche.forEach(m => m.setMap(null));
-    markersMarche = [];
-    infoWindows = [];
-}
+    function clearMarkers() {
+      markersMarche.forEach(m => m.setMap(null));
+      markersMarche = [];
+      infoWindows = [];
+    }
 
- google.maps.event.addDomListener(window, 'load', initialize);
-    </script>
+    google.maps.event.addDomListener(window, 'load', initialize);
+  </script>
 </head>
-<body>
-  <h1>Bienvenue <?= htmlspecialchars($_SESSION['pseudo']) ?> !</h1>
-<p><a href="../api/logout.php">Se déconnecter</a></p>
-  <div class="toolbar" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #f5f5f5; border-radius: 5px; margin-bottom: 10px;">
-  <div class="left-buttons">
-    <button onclick="loadAllMarches()" class="btn btn-primary">
-      <i class="fas fa-map-marker-alt"></i> Afficher tous les marchés
-    </button>
-  </div>
-  
+<body class="bg-gray-50">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Bienvenue <?= htmlspecialchars($_SESSION['pseudo']) ?> !</h1>
 
+    <div class="flex flex-col lg:flex-row gap-6">
+      <!-- Left column for forms -->
+      <div class="w-full lg:w-1/3 space-y-6">
+        <!-- Toolbar -->
+        <div class="bg-white p-4 rounded-lg shadow">
+          <div class="left-buttons">
+            <button onclick="loadAllMarches()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition duration-200">
+              <i class="fas fa-map-marker-alt mr-2"></i> Afficher tous les marchés
+            </button>
+          </div>
+        </div>
 
-  <form onsubmit="event.preventDefault(); getMarcheBy();">
-    <label for="critere">Critère :</label>
-    <select id="critere" name="critere" onchange="toggleSurface();">
-      <option value="nom">Nom</option>
-      <option value="type_couverture">Type couverture</option>
-      <option value="jour_ouverture">Jour d'ouverture</option>
-      <option value="produit_vendu">Produit vendu</option>
-    </select>
+        <!-- Recherche standard -->
+        <form onsubmit="event.preventDefault(); getMarcheBy();" class="bg-white p-4 rounded-lg shadow">
+          <h2 class="text-lg font-semibold mb-4 text-gray-700">Recherche standard</h2>
+          
+          <div class="mb-4">
+            <label for="critere" class="block text-sm font-medium text-gray-700 mb-1">Critère :</label>
+            <select id="critere" name="critere" onchange="toggleSurface();" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+              <option value="nom">Nom</option>
+              <option value="type_couverture">Type couverture</option>
+              <option value="jour_ouverture">Jour d'ouverture</option>
+              <option value="produit_vendu">Produit vendu</option>
+            </select>
+          </div>
 
-    <label for="valeur">Valeur :</label>
-    <input type="text" id="valeur" name="valeur">
+          <div id="valeurInput" class="mb-4">
+            <label for="valeur" class="block text-sm font-medium text-gray-700 mb-1">Valeur :</label>
+            <input type="text" id="valeur" name="valeur" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+          </div>
 
-    <div id="produits" style="display:none;">
-      <label>Produits :</label>
-      <label><input type="checkbox" name="produit[]" value="Légumes"> Légumes</label>
-      <label><input type="checkbox" name="produit[]" value="Viande"> Viande</label>
-      <label><input type="checkbox" name="produit[]" value="Poisson"> Poisson</label>
-      <!-- Ajoute les autres produits ici -->
+          <div id="produits" class="mb-4 hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Produits :</label>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" name="produit[]" value="Légumes" class="mr-2">
+                <span>Légumes</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" name="produit[]" value="Viande" class="mr-2">
+                <span>Viande</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" name="produit[]" value="Poisson" class="mr-2">
+                <span>Poisson</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="surface" class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Surface entre :</label>
+            <div class="flex gap-2">
+              <input type="number" id="surfaceMin" placeholder="Min" class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+              <span class="self-center">-</span>
+              <input type="number" id="surfaceMax" placeholder="Max" class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition duration-200">
+            Rechercher
+          </button>
+        </form>
+
+        <!-- Recherche spatiale -->
+        <form onsubmit="event.preventDefault(); findMarcheBy();" class="bg-blue-50 p-4 rounded-lg shadow border border-blue-100">
+          <h2 class="text-lg font-semibold mb-4 text-gray-700">Recherche spatiale</h2>
+          
+          <div class="mb-4">
+            <label for="critereSpatial" class="block text-sm font-medium text-gray-700 mb-1">Type de recherche :</label>
+            <select id="critereSpatial" name="critereSpatial" onchange="toggleSpatial();" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+              <option value="district">District</option>
+              <option value="region">Région</option>
+              <option value="commune">Commune</option>
+              <option value="province">Province</option>
+              <option value="rayon">Rayon autour du point cliqué</option>
+              <option value="near">Plus proche du point cliqué</option>
+            </select>
+          </div>
+
+          <div id="zoneInput" class="mb-4">
+            <label for="nomZone" class="block text-sm font-medium text-gray-700 mb-1">Nom de la zone :</label>
+            <input type="text" id="nomZone" name="nomZone" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+          </div>
+
+          <div id="rayonInput" class="mb-4 hidden">
+            <label for="rayon" class="block text-sm font-medium text-gray-700 mb-1">Rayon en kilomètres :</label>
+            <input type="number" id="rayon" name="rayon" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+          </div>
+
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition duration-200">
+            Rechercher (spatial)
+          </button>
+        </form>
+      </div>
+
+      <!-- Right column for map -->
+      <div class="w-full lg:w-2/3">
+        <div id="carteId" class="w-full h-[600px] rounded-lg shadow-lg border border-gray-200"></div>
+        <input type="hidden" id="lat">
+        <input type="hidden" id="lng">
+      </div>
     </div>
-
-    <div id="surface">
-      <label>Surface entre :</label>
-      <input type="number" id="surfaceMin" placeholder="Min"> -
-      <input type="number" id="surfaceMax" placeholder="Max">
-    </div>
-
-    <button type="submit">Rechercher</button>
-  </form>
-
-<form onsubmit="event.preventDefault(); findMarcheBy();" style="margin-top:20px; background-color: #e8f4ff;">
-  <label for="critereSpatial">Recherche spatiale :</label>
-  <select id="critereSpatial" name="critereSpatial" onchange="toggleSpatial();">
-    <option value="district">District</option>
-    <option value="region">Région</option>
-    <option value="commune">Commune</option>
-    <option value="province">Province</option>
-    <option value="rayon">Rayon autour du point cliqué</option>
-    <option value="near">Plus proche du point cliqué</option>
-  </select>
-
-  <div id="zoneInput">
-    <label for="nomZone">Nom de la zone :</label>
-    <input type="text" id="nomZone" name="nomZone">
   </div>
-
-  <div id="rayonInput" style="display:none;">
-    <label for="rayon">Rayon en kilomètres :</label>
-    <input type="number" id="rayon" name="rayon">
-  </div>
-
-  <button type="submit">Rechercher (spatial)</button>
-</form>
- 
-  <!-- Votre carte et champs cachés existants... -->
-  <div id="carteId" style="height: 500px; width: 100%; margin-top: 20px;"></div>
-  <input type="hidden" id="lat">
-  <input type="hidden" id="lng">
-
-  <!-- Styles pour les modals -->
-  
-  </style>
-
 
   <script>
     function toggleSurface() {
       const critere = document.getElementById("critere").value;
-      document.getElementById("produits").style.display = (critere === "produit_vendu") ? "block" : "none";
-      document.getElementById("valeur").style.display = (critere === "produit_vendu") ? "none" : "block";
+      document.getElementById("produits").classList.toggle("hidden", critere !== "produit_vendu");
+      document.getElementById("valeurInput").classList.toggle("hidden", critere === "produit_vendu");
     }
-    function toggleSpatial() {
-  const critere = document.getElementById("critereSpatial").value;
-  document.getElementById("zoneInput").style.display = ['district','region','commune','province'].includes(critere) ? 'block' : 'none';
-  document.getElementById("rayonInput").style.display = (critere === 'rayon') ? 'block' : 'none';
-}
-function createInfoWindow(marche) {
-    return new google.maps.InfoWindow({
-        content: `
-            <div style="min-width: 200px; padding: 10px; font-family: Arial, sans-serif;">
-                <h3 style="margin: 0 0 10px 0; color: #1a73e8; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
-                    ${marche.nom}
-                </h3>
-                <div style="margin-bottom: 8px;">
-                    <strong>Surface:</strong> ${marche.surface || 'N/A'} m²
-                </div>
-                <div style="margin-bottom: 8px;">
-                    <strong>Type:</strong> ${marche.type_couverture || 'N/A'}
-                </div>
-                <div style="margin-bottom: 8px;">
-                    <strong>Ouverture:</strong> ${marche.jours_ouverts || 'N/A'}
-                </div>
-                ${marche.description ? `
-                    <div style="margin-bottom: 8px; font-style: italic;">
-                        "${marche.description}"
-                    </div>
-                ` : ''}
-                ${marche.photo_url ? `
-                    <div style="margin-top: 10px;">
-                        <img src="../${marche.photo_url}" 
-                             alt="Photo du marché"
-                             style="max-width: 100%; max-height: 150px; border-radius: 4px; border: 1px solid #ddd;">
-                    </div>
-                ` : ''}
-            </div>
-        `
-    });
-}
-function addMarcheMarker(marche) {
-    // Vérification des coordonnées
-    const lat = parseFloat(marche.latitude);
-    const lng = parseFloat(marche.longitude);
-    if (isNaN(lat) || isNaN(lng)) return null;
 
-    // Création du marqueur
-    const marker = new google.maps.Marker({
+    function toggleSpatial() {
+      const critere = document.getElementById("critereSpatial").value;
+      document.getElementById("zoneInput").classList.toggle("hidden", !['district','region','commune','province'].includes(critere));
+      document.getElementById("rayonInput").classList.toggle("hidden", critere !== 'rayon');
+    }
+
+    function createInfoWindow(marche) {
+      return new google.maps.InfoWindow({
+        content: `
+          <div class="min-w-[200px] p-2 font-sans">
+            <h3 class="m-0 mb-2 text-blue-600 text-base border-b border-gray-200 pb-1">
+              ${marche.nom}
+            </h3>
+            <div class="mb-2">
+              <strong>Surface:</strong> ${marche.surface || 'N/A'} m²
+            </div>
+            <div class="mb-2">
+              <strong>Type:</strong> ${marche.type_couverture || 'N/A'}
+            </div>
+            <div class="mb-2">
+              <strong>Ouverture:</strong> ${marche.jours_ouverts || 'N/A'}
+            </div>
+            ${marche.description ? `
+              <div class="mb-2 italic">
+                "${marche.description}"
+              </div>
+            ` : ''}
+            ${marche.photo_url ? `
+              <div class="mt-2">
+                <img src="../${marche.photo_url}" 
+                     alt="Photo du marché"
+                     class="max-w-full max-h-[150px] rounded border border-gray-200">
+              </div>
+            ` : ''}
+          </div>
+        `
+      });
+    }
+
+    function addMarcheMarker(marche) {
+      const lat = parseFloat(marche.latitude);
+      const lng = parseFloat(marche.longitude);
+      if (isNaN(lat) || isNaN(lng)) return null;
+
+      const marker = new google.maps.Marker({
         position: { lat: lat, lng: lng },
         map: carte,
         title: marche.nom,
         icon: {
-            url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-            scaledSize: new google.maps.Size(32, 32)
+          url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+          scaledSize: new google.maps.Size(32, 32)
         }
-    });
+      });
 
-    // Création de l'infobulle
-    const infoWindow = createInfoWindow(marche);
+      const infoWindow = createInfoWindow(marche);
 
-    // Gestion du clic
-    marker.addListener('click', () => {
-        // Fermer toutes les autres infobulles
+      marker.addListener('click', () => {
         markersMarche.forEach(m => {
-            if (m.infoWindow) m.infoWindow.close();
+          if (m.infoWindow) m.infoWindow.close();
         });
-        
-        // Ouvrir l'infobulle actuelle
         infoWindow.open(carte, marker);
-    });
+      });
 
-    // Stocker l'infobulle avec le marqueur
-    marker.infoWindow = infoWindow;
-    markersMarche.push(marker);
-    
-    return marker;
-}
-   </script>
-
+      marker.infoWindow = infoWindow;
+      markersMarche.push(marker);
+      
+      return marker;
+    }
+  </script>
 </body>
 </html>
 
